@@ -1,1 +1,1 @@
-# quad9-as-service
+# quad9-as-a-service
