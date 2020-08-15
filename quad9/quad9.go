@@ -34,10 +34,18 @@ func creatResolver(server string) *net.Resolver {
 	}
 }
 
-// Querier TODO
+// Querier the main object provides IsBlocked functionality
 type Querier struct {
 	secQuerier Resolver
 	reqQuerier Resolver
+}
+
+// CreateQuerier the constructor for Querier
+func CreateQuerier() *Querier {
+	return &Querier{
+		creatResolver(Quad9Sec),
+		creatResolver(Quad9Unc),
+	}
 }
 
 func (q *Querier) getProbingResultsAsync(domain string) (error, error) {
