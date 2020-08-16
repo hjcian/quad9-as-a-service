@@ -1,0 +1,5 @@
+@local=localhost:12345
+
+### /checkBlocklist
+GET http://{{local}}/checkBlocklist?hostname=google.com HTTP/2.0
+

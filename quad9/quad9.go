@@ -48,6 +48,23 @@ func CreateQuerier() *Querier {
 	}
 }
 
+type benchResolver struct {
+	avgRespTime time.Duration
+}
+
+func (br *benchResolver) LookupHost(ctx context.Context, host string) (addrs []string, err error) {
+	time.Sleep(br.avgRespTime)
+	return []string{"1.2.3.4"}, nil
+}
+
+// CreateBenchQuerier the constructor for benchmarking the throughput during different delay of DNS server
+func CreateBenchQuerier(d time.Duration) *Querier {
+	return &Querier{
+		&benchResolver{d},
+		&benchResolver{d},
+	}
+}
+
 func (q *Querier) getProbingResultsAsync(domain string) (error, error) {
 	wg := sync.WaitGroup{}
 	wg.Add(2)
