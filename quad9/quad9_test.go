@@ -44,6 +44,54 @@ func (mr *mockUncResolver) LookupHost(ctx context.Context, host string) (addrs [
 	}
 	return nil, nil
 }
+func Test_cache_getter(t *testing.T) {
+	q := CreateBenchQuerier(time.Duration(100) * time.Millisecond)
+
+	getTime := func(host string, cacheGetter CacheGetter) time.Duration {
+		start := time.Now()
+		cacheGetter(host)
+		diff := time.Since(start)
+		return diff
+	}
+
+	t.Run("Test basic cache", func(t *testing.T) {
+		cacheSize := 2
+		cacheExpiry := -1
+		cacheGetter := q.NewCacheGetter(cacheSize, cacheExpiry)
+
+		host := "aaa.com"
+		diff1 := getTime(host, cacheGetter)
+		t.Logf("[First] took %v (%v) \n", diff1, diff1.Milliseconds())
+
+		diff2 := getTime(host, cacheGetter)
+		t.Logf("[Second] took %v (%v) \n", diff2, diff2.Milliseconds())
+
+		if diff2.Milliseconds() > 100 {
+			t.Errorf("%v should tool below 100ms but consumed %v \n", host, diff2)
+		}
+	})
+
+	t.Run("Test cache is expirable", func(t *testing.T) {
+		cacheSize := 2
+		cacheExpiry := 1 // in seconds
+		cacheGetter := q.NewCacheGetter(cacheSize, cacheExpiry)
+
+		host := "a.com"
+
+		diff1 := getTime(host, cacheGetter)
+		t.Logf("[First] took %v (%v) \n", diff1, diff1.Milliseconds())
+
+		// sleep 1 second for expiration
+		time.Sleep(1 * time.Second)
+
+		diff2 := getTime(host, cacheGetter)
+		t.Logf("[Second] took %v (%v) \n", diff2, diff2.Milliseconds())
+
+		if diff2.Milliseconds() < 100 {
+			t.Errorf("%v should tool longer than 100ms but consumed %v \n", host, diff2)
+		}
+	})
+}
 
 func Test_main(t *testing.T) {
 	q := Querier{

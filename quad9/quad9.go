@@ -6,6 +6,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/bluele/gcache"
 )
 
 const (
@@ -109,4 +111,39 @@ func (q *Querier) IsBlocked(domain string) (bool, error) {
 	}
 	// secured service not nil, means this domain is Okay (probably)
 	return false, nil
+}
+
+// CacheGetter the alias
+type CacheGetter func(hostname string) bool
+
+// NewCacheGetter returns CacheGetter (closure) for getting the cached or real-time results
+func (q *Querier) NewCacheGetter(cacheSize, cacheExpiry int) CacheGetter {
+	if cacheSize <= 0 {
+		return func(hostname string) bool {
+			r, _ := q.IsBlocked(hostname)
+			return r
+		}
+	}
+
+	gc := gcache.New(cacheSize).
+		LRU()
+	if cacheExpiry > 0 {
+		// cache with expiry
+		// 	otherwise cache forever
+		gc = gc.Expiration(time.Duration(cacheExpiry) * time.Second)
+	}
+	cache := gc.Build()
+
+	return func(hostname string) bool {
+		// cache hitted
+		v, err := cache.Get(hostname)
+		if err == nil {
+			return v.(bool)
+		}
+
+		// cache missed
+		r, _ := q.IsBlocked(hostname)
+		cache.Set(hostname, r)
+		return r
+	}
 }
