@@ -1,5 +1,13 @@
 @local=localhost:12345
 
 ### /checkBlocklist
-GET http://{{local}}/checkBlocklist?hostname=google.com HTTP/2.0
+GET http://{{local}}/checkBlocklist?hostname=aaa.com HTTP/2.0
 
+### /checkBlocklist
+GET http://{{local}}/checkBlocklist?hostname=bbb.com HTTP/2.0
+
+### /checkBlocklist
+GET http://{{local}}/checkBlocklist?hostname=ccc.com HTTP/2.0
+
+### /checkBlocklist
+GET http://{{local}}/checkBlocklist?hostname=ddd.com HTTP/2.0
